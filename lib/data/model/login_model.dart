@@ -16,11 +16,14 @@ class LoginModel extends User {
        );
 
   factory LoginModel.fromJson(Map<String, dynamic> json) {
+    final user = json['user'];
+    final person = user['person'];
+
     return LoginModel(
-      userName: json['account']['username'],
-      firstName: json['first_name'],
-      lastName: json['last_name'],
-      email: json['email'],
+      userName: user['username'],
+      firstName: person['first_name'],
+      lastName: person['last_name'],
+      email: person['email'],
       token: json['token'],
     );
   }
