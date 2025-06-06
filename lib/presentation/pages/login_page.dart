@@ -5,6 +5,7 @@ import 'package:lib_club/data/datasources/remote/auth_remote_datasource.dart';
 import 'package:http/http.dart' as http;
 import 'package:lib_club/domain/repositories/auth_repository.dart';
 import 'package:lib_club/domain/usecases/auth/login_user.dart';
+import 'package:lib_club/presentation/pages/home_page.dart';
 
 class LoginPage extends StatefulWidget {
   final AuthRepository authRepository = AuthRepositoryImpl(
@@ -33,12 +34,26 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
-  void _submit() {
+  void _submit() async {
     if (_formKey.currentState?.validate() ?? false) {
-      final username = _usernameController.text.trim();
-      final password = _passwordController.text.trim();
+      try {
+        final userName = _usernameController.text;
+        final password = _passwordController.text;
+        final user = await loginUser(userName, password);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Berhasil Login")));
 
-      print('Login dengan username: $username dan password: $password');
+        Navigator.pushNamed(context, '/home');
+      } catch (error) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.toString())));
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Mohon pastikan data sudah valid")),
+      );
     }
   }
 
@@ -57,60 +72,81 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(title: Text("Studi Case Lib Club")),
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextFormField(
-              controller: _usernameController,
-              decoration: const InputDecoration(
-                labelText: 'Username',
-                prefixIcon: Icon(Icons.person),
-                border: OutlineInputBorder(),
+    return Scaffold(
+      appBar: AppBar(title: Text("Studi Case Lib Club")),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          // <- TAMBAHKAN WIDGET FORM INI
+          key: _formKey, // <- HUBUNGKAN DENGAN FORM KEY
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextFormField(
+                controller: _usernameController,
+                decoration: const InputDecoration(
+                  labelText: 'Username',
+                  prefixIcon: Icon(Icons.person),
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Username tidak boleh kosong';
+                  }
+                  return null;
+                },
               ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Username tidak boleh kosong';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _passwordController,
-              obscureText: _obscurePassword,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                prefixIcon: const Icon(Icons.lock),
-                border: const OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscurePassword ? Icons.visibility_off : Icons.visibility,
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _passwordController,
+                obscureText: _obscurePassword,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  prefixIcon: const Icon(Icons.lock),
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                    ),
+                    onPressed: _togglePasswordVisibility,
                   ),
-                  onPressed: _togglePasswordVisibility,
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Password tidak boleh kosong';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _submit,
+                  child: const Text('Login'),
                 ),
               ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Password tidak boleh kosong';
-                }
-                if (value.trim().length < 6) {
-                  return 'Password minimal 6 karakter';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _submit,
-                child: const Text('Login'),
+              Row(
+                children: [
+                  Text(
+                    "Belum memiliki Akun? ",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/register');
+                    },
+                    child: Text(
+                      "click here",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

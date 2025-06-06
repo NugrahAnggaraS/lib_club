@@ -14,8 +14,10 @@ class RegisterModel extends User {
        );
 
   factory RegisterModel.fromJson(Map<String, dynamic> json) {
+    final account = json['account'];
+
     return RegisterModel(
-      userName: json['account']['username'],
+      userName: account['username'],
       firstName: json['first_name'],
       lastName: json['last_name'],
       email: json['email'],
