@@ -14,7 +14,6 @@ class AuthRepositoryImpl extends AuthRepository {
 
   @override
   Future<User> login(String userName, String password) async {
-    print('auth repo impl ${userName} ${password}');
     final User user = await remoteDatasource.login(userName, password);
     final String token = user.token ?? '';
 

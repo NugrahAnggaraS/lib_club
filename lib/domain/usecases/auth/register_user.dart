@@ -12,6 +12,6 @@ class RegisterUser {
     String lastName,
     String email,
   ) {
-    return this.repository.register(userName, firstName, lastName, email);
+    return repository.register(userName, firstName, lastName, email);
   }
 }

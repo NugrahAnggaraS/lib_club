@@ -41,8 +41,16 @@ class _RegistrationPageState extends State<RegistrationPage> {
         final lastName = _lastnameController.text;
         final email = _emailController.text;
         await registerUser(userName, firstName, lastName, email);
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Berhasil Registrasi")));
+
+        Navigator.pushNamed(context, '/');
       } catch (error) {
-        print(error.toString());
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.toString())));
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -122,6 +130,24 @@ class _RegistrationPageState extends State<RegistrationPage> {
             ),
 
             ElevatedButton(onPressed: _onSubmit, child: Text("Register")),
+
+            Row(
+              children: [
+                Text(
+                  "Sudah memiliki akun?",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/login');
+                  },
+                  child: Text(
+                    "login",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

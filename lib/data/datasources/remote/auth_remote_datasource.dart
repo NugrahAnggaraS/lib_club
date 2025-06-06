@@ -68,6 +68,7 @@ class AuthRemoteDatasource {
     String email,
   ) async {
     final endpoint = Uri.parse('${baseUrl}/auth/register');
+
     final requestBody = jsonEncode({
       "username": userName,
       "first_name": firstName,
@@ -75,12 +76,18 @@ class AuthRemoteDatasource {
       "email": email,
     });
 
-    final response = await client.post(endpoint, body: requestBody);
+    final response = await client.post(
+      endpoint,
+      headers: {"Content-Type": "application/json"},
+      body: requestBody,
+    );
+
     final responseBody = jsonDecode(response.body);
+    print(responseBody);
 
     switch (response.statusCode) {
       case 200:
-        return LoginModel.fromJson(responseBody);
+        return RegisterModel.fromJson(responseBody);
 
       case 422:
         final messageError = responseBody["message"];
