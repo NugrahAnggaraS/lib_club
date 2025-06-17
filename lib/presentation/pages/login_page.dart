@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:lib_club/core/error/server_error.dart';
+import 'package:lib_club/core/error/unauthorized_error.dart';
+import 'package:lib_club/core/error/unprocessable_content_error.dart';
 import 'package:lib_club/data/repositories/auth_repository_impl.dart';
 import 'package:lib_club/data/datasources/local/auth_local_datasource.dart';
 import 'package:lib_club/data/datasources/remote/auth_remote_datasource.dart';
 import 'package:http/http.dart' as http;
 import 'package:lib_club/domain/repositories/auth_repository.dart';
 import 'package:lib_club/domain/usecases/auth/login_user.dart';
-import 'package:lib_club/presentation/pages/home_page.dart';
 
 class LoginPage extends StatefulWidget {
   final AuthRepository authRepository = AuthRepositoryImpl(
@@ -27,6 +29,8 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
 
   bool _obscurePassword = true;
+  String? _usernameError;
+  String? _passwordError;
 
   void _togglePasswordVisibility() {
     setState(() {
@@ -35,25 +39,39 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _submit() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      try {
-        final userName = _usernameController.text;
-        final password = _passwordController.text;
-        final user = await loginUser(userName, password);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Berhasil Login")));
+    setState(() {
+      _usernameError = null;
+      _passwordError = null;
+    });
 
-        Navigator.pushNamed(context, '/home');
-      } catch (error) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(error.toString())));
-      }
-    } else {
+    try {
+      final userName = _usernameController.text;
+      final password = _passwordController.text;
+      await loginUser(userName, password);
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Berhasil Login")));
+
+      Navigator.pushNamed(context, '/home');
+    } on UnprocessableContentError catch (error) {
+      final fieldsError = error.invalidFields;
+      setState(() {
+        _usernameError = fieldsError?['username']?.join(', ');
+        _passwordError = fieldsError?['password']?.join(', ');
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Mohon pastikan data sudah valid")),
+        const SnackBar(content: Text("pastikan periksa inputan dengan benar")),
       );
+    } on UnauthorizedError catch (error) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+    } on ServerError catch (error) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
     }
   }
 
@@ -76,25 +94,20 @@ class _LoginPageState extends State<LoginPage> {
       appBar: AppBar(title: Text("Studi Case Lib Club")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
+
         child: Form(
-          // <- TAMBAHKAN WIDGET FORM INI
-          key: _formKey, // <- HUBUNGKAN DENGAN FORM KEY
+          key: _formKey,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               TextFormField(
                 controller: _usernameController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Username',
-                  prefixIcon: Icon(Icons.person),
-                  border: OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.person),
+                  border: const OutlineInputBorder(),
+                  errorText: _usernameError,
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Username tidak boleh kosong';
-                  }
-                  return null;
-                },
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -104,6 +117,7 @@ class _LoginPageState extends State<LoginPage> {
                   labelText: 'Password',
                   prefixIcon: const Icon(Icons.lock),
                   border: const OutlineInputBorder(),
+                  errorText: _passwordError,
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword
@@ -113,12 +127,6 @@ class _LoginPageState extends State<LoginPage> {
                     onPressed: _togglePasswordVisibility,
                   ),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Password tidak boleh kosong';
-                  }
-                  return null;
-                },
               ),
               const SizedBox(height: 24),
               SizedBox(
