@@ -136,7 +136,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
-                  labelText: 'Username',
+                  labelText: 'Email',
                   prefixIcon: Icon(Icons.email),
                   border: OutlineInputBorder(),
                   errorText: _emailMessageError,
