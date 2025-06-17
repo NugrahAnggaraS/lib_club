@@ -29,8 +29,8 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
 
   bool _obscurePassword = true;
-  String? _usernameError;
-  String? _passwordError;
+  String? _usernameMessageError;
+  String? _passwordMessageError;
 
   void _togglePasswordVisibility() {
     setState(() {
@@ -40,8 +40,8 @@ class _LoginPageState extends State<LoginPage> {
 
   void _submit() async {
     setState(() {
-      _usernameError = null;
-      _passwordError = null;
+      _usernameMessageError = null;
+      _passwordMessageError = null;
     });
 
     try {
@@ -57,8 +57,8 @@ class _LoginPageState extends State<LoginPage> {
     } on UnprocessableContentError catch (error) {
       final fieldsError = error.invalidFields;
       setState(() {
-        _usernameError = fieldsError?['username']?.join(', ');
-        _passwordError = fieldsError?['password']?.join(', ');
+        _usernameMessageError = fieldsError?['username']?.join(', ');
+        _passwordMessageError = fieldsError?['password']?.join(', ');
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -106,7 +106,7 @@ class _LoginPageState extends State<LoginPage> {
                   labelText: 'Username',
                   prefixIcon: const Icon(Icons.person),
                   border: const OutlineInputBorder(),
-                  errorText: _usernameError,
+                  errorText: _usernameMessageError,
                 ),
               ),
               const SizedBox(height: 16),
@@ -117,7 +117,7 @@ class _LoginPageState extends State<LoginPage> {
                   labelText: 'Password',
                   prefixIcon: const Icon(Icons.lock),
                   border: const OutlineInputBorder(),
-                  errorText: _passwordError,
+                  errorText: _passwordMessageError,
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword

@@ -30,10 +30,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final _lastnameController = TextEditingController();
   final _emailController = TextEditingController();
 
-  String? _usernameError;
-  String? _firstnameError;
-  String? _lastnameError;
-  String? _emailError;
+  String? _usernameMessageError;
+  String? _firstnameMessageError;
+  String? _lastnameMessageError;
+  String? _emailMessageError;
 
   @override
   void initState() {
@@ -43,10 +43,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   void _onSubmit() async {
     setState(() {
-      _usernameError = null;
-      _firstnameError = null;
-      _lastnameError = null;
-      _emailError = null;
+      _usernameMessageError = null;
+      _firstnameMessageError = null;
+      _lastnameMessageError = null;
+      _emailMessageError = null;
     });
 
     try {
@@ -64,10 +64,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
     } on UnprocessableContentError catch (error) {
       final invaliedFields = error.invalidFields;
       setState(() {
-        _usernameError = invaliedFields?['username']?.join(', ');
-        _emailError = invaliedFields?['email']?.join(', ');
-        _firstnameError = invaliedFields?['first_name']?.join(', ');
-        _lastnameError = invaliedFields?['last_name']?.join(', ');
+        _usernameMessageError = invaliedFields?['username']?.join(', ');
+        _emailMessageError = invaliedFields?['email']?.join(', ');
+        _firstnameMessageError = invaliedFields?['first_name']?.join(', ');
+        _lastnameMessageError = invaliedFields?['last_name']?.join(', ');
       });
     } on UnauthorizedError catch (error) {
       ScaffoldMessenger.of(
@@ -106,7 +106,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   labelText: 'Username',
                   prefixIcon: Icon(Icons.person),
                   border: OutlineInputBorder(),
-                  errorText: _usernameError,
+                  errorText: _usernameMessageError,
                 ),
               ),
               const SizedBox(height: 16),
@@ -117,7 +117,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   labelText: 'Firstname',
                   prefixIcon: Icon(Icons.person),
                   border: OutlineInputBorder(),
-                  errorText: _firstnameError,
+                  errorText: _firstnameMessageError,
                 ),
               ),
               const SizedBox(height: 16),
@@ -128,7 +128,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   labelText: 'Lastname',
                   prefixIcon: Icon(Icons.person),
                   border: OutlineInputBorder(),
-                  errorText: _lastnameError,
+                  errorText: _lastnameMessageError,
                 ),
               ),
               const SizedBox(height: 16),
@@ -139,7 +139,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   labelText: 'Username',
                   prefixIcon: Icon(Icons.email),
                   border: OutlineInputBorder(),
-                  errorText: _emailError,
+                  errorText: _emailMessageError,
                 ),
               ),
               const SizedBox(height: 16),
