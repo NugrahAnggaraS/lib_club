@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:lib_club/core/error/server_error.dart';
+import 'package:lib_club/core/error/unauthorized_error.dart';
+import 'package:lib_club/core/error/unprocessable_content_error.dart';
 import 'package:lib_club/data/datasources/local/auth_local_datasource.dart';
 import 'package:lib_club/data/datasources/remote/auth_remote_datasource.dart';
 import 'package:lib_club/data/repositories/auth_repository_impl.dart';
@@ -27,6 +30,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final _lastnameController = TextEditingController();
   final _emailController = TextEditingController();
 
+  String? _usernameError;
+  String? _firstnameError;
+  String? _lastnameError;
+  String? _emailError;
+
   @override
   void initState() {
     super.initState();
@@ -34,27 +42,40 @@ class _RegistrationPageState extends State<RegistrationPage> {
   }
 
   void _onSubmit() async {
-    if (_formKey.currentState!.validate()) {
-      try {
-        final userName = _usernameController.text;
-        final firstName = _firstNameController.text;
-        final lastName = _lastnameController.text;
-        final email = _emailController.text;
-        await registerUser(userName, firstName, lastName, email);
+    setState(() {
+      _usernameError = null;
+      _firstnameError = null;
+      _lastnameError = null;
+      _emailError = null;
+    });
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Berhasil Registrasi")));
+    try {
+      final userName = _usernameController.text;
+      final firstName = _firstNameController.text;
+      final lastName = _lastnameController.text;
+      final email = _emailController.text;
+      await registerUser(userName, firstName, lastName, email);
 
-        Navigator.pushNamed(context, '/');
-      } catch (error) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(error.toString())));
-      }
-    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Berhasil Registrasi")));
+
+      Navigator.pushNamed(context, '/');
+    } on UnprocessableContentError catch (error) {
+      final invaliedFields = error.invalidFields;
+      setState(() {
+        _usernameError = invaliedFields?['username']?.join(', ');
+        _emailError = invaliedFields?['email']?.join(', ');
+        _firstnameError = invaliedFields?['first_name']?.join(', ');
+        _lastnameError = invaliedFields?['last_name']?.join(', ');
+      });
+    } on UnauthorizedError catch (error) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+    } on ServerError catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("pastikan keseluruhan data sudah valid")),
+        SnackBar(content: Text("Terjadi Kesalahan Servers: ${error.message}")),
       );
     }
   }
@@ -71,84 +92,78 @@ class _RegistrationPageState extends State<RegistrationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Form(
-        key: _formKey,
-        child: Column(
-          children: [
-            TextFormField(
-              controller: _usernameController,
-              keyboardType: TextInputType.text,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return "pastikan username tidak kosong";
-                } else if (value.length < 3) {
-                  return "pastikan username panjangnya lebih dari 3";
-                }
-
-                return null;
-              },
-            ),
-
-            TextFormField(
-              controller: _firstNameController,
-              keyboardType: TextInputType.text,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return "pastikan firstname tidak kosong";
-                }
-
-                return null;
-              },
-            ),
-
-            TextFormField(
-              controller: _lastnameController,
-              keyboardType: TextInputType.text,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return "pastikan lastname tidak kosong";
-                }
-
-                return null;
-              },
-            ),
-
-            TextFormField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return "pastikan lastname tidak kosong";
-                } else if (!RegExp(
-                  r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                ).hasMatch(value)) {
-                  return 'Format email tidak valid';
-                }
-
-                return null;
-              },
-            ),
-
-            ElevatedButton(onPressed: _onSubmit, child: Text("Register")),
-
-            Row(
-              children: [
-                Text(
-                  "Sudah memiliki akun?",
-                  style: TextStyle(fontWeight: FontWeight.bold),
+      appBar: AppBar(title: Text("Studi Case Lib Club")),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _usernameController,
+                keyboardType: TextInputType.text,
+                decoration: InputDecoration(
+                  labelText: 'Username',
+                  prefixIcon: Icon(Icons.person),
+                  border: OutlineInputBorder(),
+                  errorText: _usernameError,
                 ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/login');
-                  },
-                  child: Text(
-                    "login",
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _firstNameController,
+                keyboardType: TextInputType.text,
+                decoration: InputDecoration(
+                  labelText: 'Firstname',
+                  prefixIcon: Icon(Icons.person),
+                  border: OutlineInputBorder(),
+                  errorText: _firstnameError,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _lastnameController,
+                keyboardType: TextInputType.text,
+                decoration: InputDecoration(
+                  labelText: 'Lastname',
+                  prefixIcon: Icon(Icons.person),
+                  border: OutlineInputBorder(),
+                  errorText: _lastnameError,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  labelText: 'Username',
+                  prefixIcon: Icon(Icons.email),
+                  border: OutlineInputBorder(),
+                  errorText: _emailError,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(onPressed: _onSubmit, child: Text("Register")),
+
+              Row(
+                children: [
+                  Text(
+                    "Sudah memiliki akun?",
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                ),
-              ],
-            ),
-          ],
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/login');
+                    },
+                    child: Text(
+                      "login",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
